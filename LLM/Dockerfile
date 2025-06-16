@@ -1,11 +1,10 @@
 FROM vllm/vllm-openai:latest
 
-# Optional: install extra Python packages
-# RUN pip install some-other-package
+# Optionally install extra tools or packages here if needed
+# RUN pip install your-custom-dependencies
 
-# Optional: copy your app or scripts into the container
-# COPY . /app
-# WORKDIR /app
+# Expose vLLM OpenAI-compatible endpoint
+EXPOSE 11434
 
-# Default command to run vLLM server
-CMD ["--model", "mistralai/Mistral-7B-Instruct-v0.2"]
+# Set the default command to launch the API with TinyLlama
+CMD ["--model", "TinyLlama/TinyLlama-1.1B-Chat-v1.0"]

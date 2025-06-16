@@ -93,7 +93,7 @@ section_names = [
     "work  experience",
     "education",
     "skills",
-    "PERSONAL PROJECTS",
+    "personal  projects",
     "certifications",
 ]
 
