@@ -1,84 +1,104 @@
 from langchain.document_loaders import PyPDFLoader
-import time
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
+# from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain.chat_models import ChatOpenAI
+from langchain.chains import RetrievalQA
+from langchain.prompts import PromptTemplate
+import time
 import collections
 import collections.abc
 
+from utils import (
+    label_chunk,
+    chunk_by_ordered_sections,
+)  # Assuming utils.py contains the label_chunk function
+
+# Compatibility fix for some Python environments
 collections.MutableSet = collections.abc.MutableSet
 collections.MutableMapping = collections.abc.MutableMapping
 
-# Profiling: Loading PDF
+# === Load and Split PDF ===
+print("📄 Loading PDF...")
 start = time.time()
 loader = PyPDFLoader("Resume.pdf")
 documents = loader.load()
-print(f"Loaded PDF in {time.time() - start:.2f} seconds.")
+print(f"✅ Loaded PDF in {time.time() - start:.2f} seconds.")
 
-# # Profiling: Splitting documents
+# print("\n🔪 Splitting PDF into chunks...")
+# splitter = RecursiveCharacterTextSplitter(
+#     chunk_size=200, chunk_overlap=100, separators=["\n\n", "\n", ".", " "]
+# )
+
+# docs = splitter.split_documents(documents)
+# print(f"✅ Split into {len(docs)} chunks.\n")
+
+# for i, chunk in enumerate(docs[:5]):
+#     print(f"--- Chunk {i + 1} ---")
+#     print("Text:\n", chunk.page_content)
+#     print("Metadata:", chunk.metadata, "\n")
+
+#     section = label_chunk(chunk.page_content)
+#     print(f"Section Label: {section}\n")
+#     chunk.metadata["section"] = section  # Add section label to metadata
+
+section_names = [
+    "work  experience",
+    "education",
+    "skills",
+    "PERSONAL PROJECTS",
+    "certifications",
+]
+docs = chunk_by_ordered_sections(documents, section_names)
+
+# === Embedding and Vector Store ===
+print("🔍 Creating embeddings and vector store...")
 start = time.time()
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-
-UPDATED_CHUNKS = True  # Set to False if you want to use existing chunks
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=100, chunk_overlap=50, separators=["\n\n", "\n", ".", " "]
-)
-docs = splitter.split_documents(documents)
-# print(f"Split documents in {time.time() - start:.2f} seconds.")
-
-for i, chunk in enumerate(docs[:10]):
-    print(f"\n--- Chunk {i + 1} ---")
-    print("Text:\n", chunk.page_content)
-    print("Metadata:\n", chunk.metadata)
-
-# # Profiling: Embedding
-# start = time.time()
-from langchain.embeddings import HuggingFaceEmbeddings
-
+UPDATED_CHUNKS = True  # Toggle to load from disk if chunks are unchanged
 embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
-# print(f"Initialized embeddings in {time.time() - start:.2f} seconds.")
 
-# # Profiling: Vector store creation
-start = time.time()
-from langchain_community.vectorstores import FAISS
-
-if UPDATED_CHUNKS == True:
+if UPDATED_CHUNKS:
     db = FAISS.from_documents(docs, embeddings)
     db.save_local("resume_vector_store")
-    print(f"Created and saved vector store in {time.time() - start:.2f} seconds.")
+    print(f"✅ Created and saved vector store in {time.time() - start:.2f} seconds.")
 else:
     db = FAISS.load_local(
         "resume_vector_store", embeddings, allow_dangerous_deserialization=True
     )
-    print(f"Loaded vector store in {time.time() - start:.2f} seconds.")
+    print(f"✅ Loaded vector store from disk in {time.time() - start:.2f} seconds.")
 
-# Profiling: LLM and QA chain setup
+# === Set Up LLM and QA Chain ===
+print("\n🤖 Setting up LLM and QA chain...")
 start = time.time()
-from langchain.chat_models import ChatOpenAI
-from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
-
 llm = ChatOpenAI(
     base_url="http://localhost:8000/v1",
     api_key="not-needed",
     model_name="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    temperature=0,
+    top_p=1,
 )
-# retriever = db.as_retriever()
-retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 3})
+
+retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 2})
+# retriever = db.as_retriever(
+#     search_type="mmr", search_kwargs={"k": 5, "lambda_mult": 0.5}
+# )
 
 prompt_template = """
-You are an assistant that answers questions using ONLY the provided resume content.
-If the answer is not present in the resume, reply: "The answer is not found in the resume."
+You are the owner of the resume below. Use the **entire resume**, including the header (name, email, location, links), to answer all questions.
 
-The resume format is as follows:
-    Name, City, Social/Contact Info
-    
-    Category (e.g., Education, Experience, Skills):
-        Role or Degree, Institution/Company, Dates
-        - Description of responsibilities, achievements, and skills.
+✅ Always copy values like name, email, phone number, and location exactly from the resume.
+❌ Never guess or omit header information.
+
+Answer ONLY based on the content provided. If the information is not explicitly present, reply exactly: 'The answer is not found in the resume.' Do NOT fabricate or add any information.
 
 Resume:
 {context}
 
 Question: {question}
+
+Answer:
 """
 prompt = PromptTemplate(
     input_variables=["context", "question"],
@@ -88,29 +108,134 @@ prompt = PromptTemplate(
 qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
     retriever=retriever,
-    return_source_documents=False,
+    return_source_documents=True,
     chain_type_kwargs={"prompt": prompt},
 )
+print(f"✅ LLM and QA chain ready in {time.time() - start:.2f} seconds.\n")
 
-print(f"Set up LLM and QA chain in {time.time() - start:.2f} seconds.")
+# === QA Loop with Expected Answers ===
 
-# Profiling: Question answering loop
-questions = [
-    "What is the name on the resume?",
-    "Is Steven Liu in the resume?",
-    "Who's resume is this?",
-    # "What is my email address?",
-    # "What is my phone number?",
-    # "What is my highest degree?",
-    # "What programming languages do I know?",
-    # "What experience do I have with backend development?",
-    # "What is my work experience?",
-    # "What is my education background?",
+test_cases = [
+    {
+        "question": "What is the name on the resume?",
+        "expected": "Steven Liu",
+    },
+    {
+        "question": "Is Steven Liu in the resume?",
+        "expected": "Yes",
+    },
+    {
+        "question": "Who's resume is this?",
+        "expected": "Steven Liu",
+    },
+    {
+        "question": "What is my email address?",
+        "expected": "steventheliu@gmail.com",
+    },
+    {
+        "question": "What city is listed on the resume?",
+        "expected": "San Francisco, CA",
+    },
+    {
+        "question": "What is my LinkedIn profile?",
+        "expected": "The answer is not found in the resume.",
+    },
+    {
+        "question": "What is my highest degree?",
+        "expected": "Data Science B.S.",
+    },
+    {
+        "question": "What university did I attend?",
+        "expected": "University of California, San Diego",
+    },
+    {
+        "question": "What was my GPA?",
+        "expected": "3.72",
+    },
+    {
+        "question": "When did I graduate?",
+        "expected": "The answer is not found in the resume.",  # Update if grad date exists
+    },
+    {
+        "question": "Where did I work most recently?",
+        "expected": "AIMdyn",
+    },
+    {
+        "question": "What was my job title at AIMdyn?",
+        "expected": "Software Engineer",
+    },
+    {
+        "question": "What were my main responsibilities at AIMdyn?",
+        "expected": "Built internal Python APIs for automating business logic, ran benchmarking models for COVID-19, developed GUIs with Tkinter for ML simulations.",  # Update if you want full bullets
+    },
+    {
+        "question": "What technologies did I use in my last job?",
+        "expected": "Python, Tkinter, Docker, ETL, Airflow",  # Adjust based on resume
+    },
+    {
+        "question": "Was my work at AIMdyn remote?",
+        "expected": "Yes",
+    },
+    {
+        "question": "What programming languages do I know?",
+        "expected": "Python, CSS, HTML, JavaScript, TypeScript, SQL, C++, Java",
+    },
+    {
+        "question": "What are my personal projects?",
+        "expected": "FoodLens",
+    },
+    {
+        "question": "What cloud certifications do I hold?",
+        "expected": "AWS Certified Cloud Practitioner — 11/2024",
+    },
+    {
+        "question": "What is my phone number?",
+        "expected": "The answer is not found in the resume.",
+    },
+    {
+        "question": "Did I work at Google?",
+        "expected": "The answer is not found in the resume.",
+    },
+    {
+        "question": "Is there a car?",
+        "expected": "The answer is not found in the resume.",
+    },
 ]
 
-for question in questions:
+
+# === Testing Loop ===
+print("🧪 Running tests...\n")
+passed, failed = 0, 0
+
+for test in test_cases:
     start = time.time()
-    print(f"Processing question: {question} started at {time.strftime('%H:%M:%S')}")
-    response = qa_chain.run(question)
+    question = test["question"]
+    expected = test["expected"]
+
+    print(f"🔎 Question: {question}")
+    result = qa_chain.invoke({"query": question})
+    answer = result["result"]
+    source_docs = result["source_documents"]
     elapsed = time.time() - start
-    print(f"Q: {question}\nA: {response}\n(Time taken: {elapsed:.2f} seconds)\n")
+
+    # Simple match check — can be customized to allow partials or fuzzy matching
+    is_correct = expected.lower() in answer.lower()
+
+    print(f"📝 Answer: {answer}")
+    print(f"✅ Expected: {expected}")
+    print("🎯 Match:", "✅ PASS" if is_correct else "❌ FAIL")
+
+    if is_correct:
+        passed += 1
+    else:
+        failed += 1
+        print("❗️ Source Documents: \n")
+        for doc in source_docs:
+            print(
+                f"  - {doc.metadata.get('source', 'Unknown Source')}: {doc.page_content[:100]}..."
+            )
+
+    print(f"⏱️ Time taken: {elapsed:.2f} seconds\n" + "-" * 60 + "\n")
+
+
+print(f"✅ {passed} passed, ❌ {failed} failed out of {len(test_cases)} tests.\n")
