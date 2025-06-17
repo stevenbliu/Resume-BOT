@@ -1,0 +1,49 @@
+services:
+  - type: web
+    name: rag-service
+    env: docker
+    plan: starter
+    dockerfilePath: ./rag/Dockerfile
+    buildCommand: ""
+    startCommand: ""
+    envVars:
+      - key: RAG_SERVICE_URL
+        value: http://llm:11434  # placeholder - llm not deployed here
+    autoDeploy: true
+
+  - type: web
+    name: resume-backend
+    env: docker
+    plan: starter
+    dockerfilePath: ./backend/Dockerfile
+    buildCommand: ""
+    startCommand: ""
+    envVars:
+      - key: OLLAMA_BASE_URL
+        value: http://llm:11434  # placeholder
+    autoDeploy: true
+
+  - type: web
+    name: resume-frontend
+    env: docker
+    plan: starter
+    dockerfilePath: ./frontend/Dockerfile
+    buildCommand: ""
+    startCommand: ""
+    envVars:
+      - key: PORT
+        value: "80"
+      - key: NODE_ENV
+        value: development
+      - key: CHOKIDAR_USEPOLLING
+        value: "true"
+    autoDeploy: true
+
+  - type: web
+    name: nginx
+    env: docker
+    plan: starter
+    dockerfilePath: ./nginx/Dockerfile
+    buildCommand: ""
+    startCommand: ""
+    autoDeploy: true
