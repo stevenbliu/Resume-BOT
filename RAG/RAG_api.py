@@ -30,18 +30,21 @@ app = FastAPI()
 #     allow_headers=["*"],
 # )
 
+origins = [
+    FRONTEND_URL,
+    BACKEND_URL,
+    "http://localhost:3000",  # fallback for local dev, optional
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        FRONTEND_URL,
-        BACKEND_URL,
-        "http://localhost:3000",  # fallback for local dev, optional
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+print("Allowed CORS origins:", origins)
 
 # Reuse your QA logic setup here — load model, retriever, vector DB
 # from your_script import qa_chain, reindex_resume, validate_answer

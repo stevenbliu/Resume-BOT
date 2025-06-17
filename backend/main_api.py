@@ -40,17 +40,22 @@ app = FastAPI()
 #     allow_headers=["*"],
 # )
 
+origins = [
+    FRONTEND_URL,
+    BACKEND_URL,
+    "http://localhost:3000",  # fallback for local dev, optional
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        FRONTEND_URL,
-        BACKEND_URL,
-        "http://localhost:3000",  # fallback for local dev, optional
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+print("Allowed CORS origins:", origins)
+
 
 # RAG_SERVICE_URL = "http://rag:8000/answer"  # Use service name in Docker network
 
