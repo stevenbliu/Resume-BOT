@@ -16,9 +16,10 @@ export default function ChatbotModal({ open, onClose }) {
     setLoading(true);
 
     try {
+      console.log("Sending message to backend:", input);
       const apiUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
       console.log("API URL:", apiUrl);
-      const res = await fetch(`${apiUrl}answer`, {
+      const res = await fetch(`${apiUrl}/answer`, {
       // const res = await fetch("http://backend:8001/answer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
