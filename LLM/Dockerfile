@@ -1,10 +1,11 @@
-FROM vllm/vllm-openai:latest
+# Use Ollama's official base image
+FROM ollama/ollama:latest
 
-# Optionally install extra tools or packages here if needed
-# RUN pip install your-custom-dependencies
+# Optional: pre-download a model (e.g., mistral, llama2, gemma)
+# Comment this line if you prefer to load the model later manually
+RUN ollama pull mistral
 
-# Expose vLLM OpenAI-compatible endpoint
+# Expose the default Ollama API port
 EXPOSE 11434
 
-# Set the default command to launch the API with TinyLlama
-CMD ["--model", "TinyLlama/TinyLlama-1.1B-Chat-v1.0"]
+# Ollama runs its server by default, so no CMD override is needed
