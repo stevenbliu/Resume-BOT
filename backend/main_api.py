@@ -6,10 +6,12 @@ import os
 
 env_mode = os.getenv("APP_ENV", "development")
 load_dotenv(f"../.env.{env_mode}")
+print(f"Using environment: {env_mode}")
 
 # Load URLs from env
 FRONTEND_URL = os.getenv("FRONTEND_URL")
 RAG_SERVICE_URL = os.getenv("RAG_URL") + "/answer"  # append path as needed
+
 
 app = FastAPI()
 
