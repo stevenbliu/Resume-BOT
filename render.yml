@@ -3,31 +3,31 @@ services:
     name: rag-service
     env: docker
     plan: starter
-    dockerfilePath: ./rag/Dockerfile
+    dockerfilePath: RAG/Dockerfile
     buildCommand: ""
     startCommand: ""
     envVars:
       - key: RAG_SERVICE_URL
-        value: http://llm:11434  # placeholder - llm not deployed here
+        value: http://llm:11434  # Placeholder for now
     autoDeploy: true
 
   - type: web
     name: resume-backend
     env: docker
     plan: starter
-    dockerfilePath: ./backend/Dockerfile
+    dockerfilePath: backend/Dockerfile
     buildCommand: ""
     startCommand: ""
     envVars:
       - key: OLLAMA_BASE_URL
-        value: http://llm:11434  # placeholder
+        value: http://llm:11434  # Placeholder
     autoDeploy: true
 
   - type: web
     name: resume-frontend
     env: docker
     plan: starter
-    dockerfilePath: ./frontend/Dockerfile
+    dockerfilePath: frontend/Dockerfile
     buildCommand: ""
     startCommand: ""
     envVars:
@@ -43,7 +43,7 @@ services:
     name: nginx
     env: docker
     plan: starter
-    dockerfilePath: ./nginx/Dockerfile
+    dockerfilePath: nginx/Dockerfile
     buildCommand: ""
     startCommand: ""
     autoDeploy: true
