@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import os
 
 env_mode = os.getenv("APP_ENV", "development")
-load_dotenv(f".env.{env_mode}")
+load_dotenv(f"../.env.{env_mode}")
 
 # Load URLs from env
 FRONTEND_URL = os.getenv("FRONTEND_URL")
@@ -38,7 +38,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-RAG_SERVICE_URL = "http://rag:8000/answer"  # Use service name in Docker network
+# RAG_SERVICE_URL = "http://rag:8000/answer"  # Use service name in Docker network
 
 
 @app.post("/answer")
