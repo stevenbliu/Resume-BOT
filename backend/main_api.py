@@ -5,13 +5,23 @@ from dotenv import load_dotenv
 import os
 
 env_mode = os.getenv("APP_ENV", "development")
-load_dotenv(f"../.env.{env_mode}")
+env_path = f".env.{env_mode}"
+env_loaded = load_dotenv(env_path)
 print(f"Using environment: {env_mode}")
+
+if env_loaded:
+    print(f"Loaded environment file: {env_path}")
+else:
+    print(
+        f"WARNING: Environment file not found {env_path}. Using default environment variables."
+    )
+
 
 # Load URLs from env
 FRONTEND_URL = os.getenv("FRONTEND_URL")
-RAG_SERVICE_URL = os.getenv("RAG_URL") + "/answer"  # append path as needed
-
+RAG_SERVICE_URL = os.getenv("RAG_URL")  # + "/answer"  # append path as needed
+print(f"RAG Service URL: {RAG_SERVICE_URL}")
+print(f"Frontend URL: {FRONTEND_URL}")
 
 app = FastAPI()
 
