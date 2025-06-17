@@ -16,7 +16,8 @@ export default function ChatbotModal({ open, onClose }) {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8001/answer", {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const res = await fetch(`${apiUrl}/answer`, {
       // const res = await fetch("http://backend:8001/answer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
