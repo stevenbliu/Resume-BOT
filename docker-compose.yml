@@ -1,52 +1,73 @@
 version: '3.8'
 
 services:
-  llm:
-    build: ./llm
-    container_name: tinyllama-vllm
-    ports:
-      - "11434:11434"
-    runtime: nvidia
-    environment:
-      - HF_HUB_ENABLE_HF_TRANSFER=1
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    restart: unless-stopped
+  # llm:
+  #   build: ./llm
+  #   container_name: tinyllama-vllm
+  #   ports:
+  #     - "11434:11434"
+  #   runtime: nvidia
+  #   environment:
+  #     - HF_HUB_ENABLE_HF_TRANSFER=1
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: all
+  #             capabilities: [gpu]
+  #   restart: unless-stopped
 
   rag:
     build: ./rag
     container_name: rag-service
     ports:
       - "8000:8000"
-    depends_on:
-      - llm
+    # depends_on:
+    #   - llm
     environment:
       - RAG_SERVICE_URL=http://llm:11434
     restart: unless-stopped
+    volumes:
+      - ./rag:/app
 
   backend:
     build: ./backend
     container_name: resume-backend
     ports:
       - "8001:8001"
-    depends_on:
-      - llm
+    # depends_on:
+    #   - llm
     environment:
       - OLLAMA_BASE_URL=http://llm:11434
     restart: unless-stopped
+    volumes:
+      - ./backend:/app
 
   frontend:
     build:
       context: ./frontend
     container_name: resume-frontend
     ports:
-      - "80:80"
+      - "3000:80"
     restart: unless-stopped
+    environment:
+      - PORT=80
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - resume-frontend
+      - resume-backend
+
 
 # Optional volumes - remove if not used
 # volumes:

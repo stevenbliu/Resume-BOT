@@ -3,3 +3,7 @@ langchain-community
 langchain-openai
 # langchain-deepse
 pypdf
+fastapi
+httpx   
+uvicorn
+python-multipart
