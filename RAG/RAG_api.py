@@ -3,18 +3,40 @@ from pydantic import BaseModel
 from typing import Optional
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+import os
+
+env_mode = os.getenv("APP_ENV", "development")
+load_dotenv(f".env.{env_mode}")
+
+# Load URLs from env
+FRONTEND_URL = os.getenv("FRONTEND_URL")
+RAG_SERVICE_URL = os.getenv("RAG_URL") + "/answer"  # append path as needed
+BACKEND_URL = os.getenv("BACKEND_URL")
 
 app = FastAPI()
 
 # Allow requests from your frontend
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=[
+#         "http://localhost:3000",
+#         "http://localhost:80",
+#         "http://localhost:8000",
+#         "http://localhost",
+#     ],  # or ["*"] for all origins (not recommended for production)
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:80",
-        "http://localhost:8000",
-        "http://localhost",
-    ],  # or ["*"] for all origins (not recommended for production)
+        # FRONTEND_URL,
+        BACKEND_URL,
+        "http://localhost:3000",  # fallback for local dev, optional
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
