@@ -20,6 +20,7 @@ else:
 # Load URLs from env
 FRONTEND_URL = os.getenv("FRONTEND_URL")
 RAG_SERVICE_URL = os.getenv("RAG_URL")  # + "/answer"  # append path as needed
+BACKEND_URL = os.getenv("BACKEND_URL")
 print(f"RAG Service URL: {RAG_SERVICE_URL}")
 print(f"Frontend URL: {FRONTEND_URL}")
 
@@ -43,6 +44,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         FRONTEND_URL,
+        BACKEND_URL,
         "http://localhost:3000",  # fallback for local dev, optional
     ],
     allow_credentials=True,

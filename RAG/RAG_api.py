@@ -33,7 +33,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        # FRONTEND_URL,
+        FRONTEND_URL,
         BACKEND_URL,
         "http://localhost:3000",  # fallback for local dev, optional
     ],
