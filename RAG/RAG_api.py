@@ -61,7 +61,7 @@ def ask_question(req: QARequest):
     for attempt in range(req.retries):
         # result = qa_chain.invoke({"query": req.question})
         result = {
-            "result": "dummy answer222"
+            "result": "dummy answer222 from RAG API"
         }  # Replace with actual QA chain invocation
         answer = result["result"]
         if not req.expected or req.expected.lower() in answer.lower():
