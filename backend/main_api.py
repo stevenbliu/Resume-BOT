@@ -1,8 +1,10 @@
 import httpx
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
+import json
+
 
 env_mode = os.getenv("APP_ENV", "development")
 env_path = f".env.{env_mode}"
@@ -63,15 +65,37 @@ print("Allowed CORS origins:", origins)
 @app.post("/answer")
 async def answer(request: Request):
     print("Received request to /answer endpoint with body:", await request.body())
-    data = await request.json()
+
+    try:
+        data = await request.json()
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON in request.")
+
     question = data.get("question")
+    if not question:
+        raise HTTPException(status_code=400, detail="Missing 'question' field.")
 
     async with httpx.AsyncClient() as client:
-        response = await client.post(
-            RAG_SERVICE_URL + "/answer", json={"question": question}
-        )
-        # response = "dummy response"  # Replace with actual call to RAG service
-        rag_response = response.json()
+        try:
+            response = await client.post(
+                RAG_SERVICE_URL + "/answer", json={"question": question}
+            )
+            response.raise_for_status()
+        except httpx.RequestError as exc:
+            print(f"❌ Request failed: {exc}")
+            raise HTTPException(status_code=502, detail="Failed to reach RAG service.")
+        except httpx.HTTPStatusError as exc:
+            print(f"❌ HTTP error: {exc}")
+            raise HTTPException(
+                status_code=502, detail="RAG service returned an error."
+            )
 
-    return {"answer": rag_response.get("answer")}
-    # return {"answer": response}
+        try:
+            rag_response = response.json()  # ❌ this needs to be awaited!
+        except json.JSONDecodeError:
+            print("⚠️ Invalid JSON from RAG service:", response.text)
+            raise HTTPException(
+                status_code=502, detail="Invalid response from RAG service."
+            )
+
+    return {"answer": rag_response.get("answer", "No answer provided")}
