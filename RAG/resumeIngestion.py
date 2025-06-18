@@ -73,9 +73,11 @@ else:
 print("\n🤖 Setting up LLM and QA chain...")
 start = time.time()
 llm = ChatOpenAI(
-    base_url="http://localhost:8000/v1",
+    # base_url="http://localhost:8000/v1",
+    base_url="https://resume-bot-llm.onrender.com/",
     api_key="not-needed",
-    model_name="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    # model_name="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    model_name='mistral'
     temperature=0,
     top_p=1,
 )
