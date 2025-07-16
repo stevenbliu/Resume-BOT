@@ -1,5 +1,10 @@
 // components/Contact.jsx
-export default function Contact() {
+
+type ContactProps = {
+  darkMode: boolean;
+};
+
+export default function Contact({ darkMode }: ContactProps) {
   return (
     <section style={{ margin: "40px 0" }}>
       <h2>Contact</h2>

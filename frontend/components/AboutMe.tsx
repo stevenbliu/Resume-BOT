@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 
-export default function AboutMe() {
+type AboutMeProps = {
+  darkMode: boolean;
+};
+
+export default function AboutMe({ darkMode }: AboutMeProps) {
   const text = "Hi, I'm Steven Liu, a passionate 111111.";
   const [displayed, setDisplayed] = useState("");
 

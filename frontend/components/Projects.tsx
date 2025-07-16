@@ -5,9 +5,11 @@ const projects = [
   { title: "Project B", description: "Another cool thing" },
 ];
 
+type ProjectsProps = {
+  darkMode: boolean;
+};
 
-
-export default function Projects() {
+export default function Projects({ darkMode }: ProjectsProps) {
   return (
     <div
       style={{

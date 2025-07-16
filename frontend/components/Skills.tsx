@@ -6,7 +6,11 @@ const skills = [
   { name: "Python", level: 80 },
 ];
 
-export default function Skills() {
+type SkillsProps = {
+  darkMode: boolean;
+};
+
+export default function Skills({ darkMode }: SkillsProps) {
   return (
     <div>
       {skills.map(({ name, level }) => (
