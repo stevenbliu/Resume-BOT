@@ -1,20 +1,42 @@
-// components/Projects.jsx
+import { motion } from "framer-motion";
+
+const projects = [
+  { title: "Project A", description: "Cool project description" },
+  { title: "Project B", description: "Another cool thing" },
+];
+
+
+
 export default function Projects() {
   return (
-    <section style={{ margin: "40px 0" }}>
-      <h2>Projects</h2>
-      <div>
-        <div style={{ marginBottom: 24 }}>
-          <h3>Ship Routing Simulation API</h3>
-          <p>
-            Built a monolithic RESTful API using Django for ship routing simulation, optimizing routes and simulating ship movements.
-          </p>
-          <a href="https://github.com/yourusername/ship-routing" target="_blank" rel="noopener noreferrer">
-            View on GitHub
-          </a>
-        </div>
-        {/* Add more projects here */}
-      </div>
-    </section>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))",
+        gap: 24,
+      }}
+    >
+      {projects.map(({ title, description }) => (
+        <motion.div
+          key={title}
+          whileHover={{ scale: 1.05 }}
+          style={{
+            padding: 20,
+            borderRadius: 16,
+            boxShadow: "0 4px 14px rgba(0,0,0,0.1)",
+            background: "#fff",
+            cursor: "pointer",
+            position: "relative",
+            overflow: "hidden",
+          }}
+          tabIndex={0}
+          aria-label={`Project: ${title}`}
+        >
+          <h3>{title}</h3>
+          <p>{description}</p>
+          {/* Could add modal trigger here */}
+        </motion.div>
+      ))}
+    </div>
   );
 }

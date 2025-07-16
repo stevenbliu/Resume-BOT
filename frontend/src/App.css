@@ -1,0 +1,27 @@
+body {
+  /* background: linear-gradient(-45deg, #141E30, #243B55, #0f2027, #203a43);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite; */
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+
+.animated-background {
+  position: relative;
+  background: linear-gradient(-45deg, #141E30, #243B55, #0f2027, #203a43);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+  min-height: 100vh;
+  z-index: 0;
+}

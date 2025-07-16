@@ -1,24 +1,18 @@
-// components/AboutMe.jsx
+import React, { useState, useEffect } from "react";
+
 export default function AboutMe() {
-  return (
-    <section style={{ margin: "40px 0" }}>
-      {/* <img
-        src="/profile.jpg"
-        alt="Steven Liu"
-        style={{ width: 120, borderRadius: "50%", marginBottom: 16 }}
-      /> */}
+  const text = "Hi, I'm Steven Liu, a passionate 111111.";
+  const [displayed, setDisplayed] = useState("");
 
-        <h1 style={{
-          fontSize: 38, fontWeight: 800, color: "#0078d4", marginBottom: 12,
-          letterSpacing: "-1px"
-        }}>
-          Steven Liu's Resume Chatbot5
-        </h1>
+  useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      setDisplayed(text.slice(0, i));
+      i++;
+      if (i > text.length) clearInterval(interval);
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
 
-      <h2>About Me</h2>
-      <p>
-        Hi, I'm Steven Liu, a software engineer based in San Francisco. I specialize in backend development, data engineering, and building scalable systems.
-      </p>
-    </section>
-  );
+  return <h1>{displayed}|</h1>;
 }
